@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Syncopate:wght@700&display=swap');
+
+/* Design tokens and a predictable baseline for the standalone game page. */
+:root {
+	color: #eff7ff;
+	background: #071225;
+	font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	min-height: 100dvh;
+	margin: 0;
+	overflow: hidden;
+	background: radial-gradient(circle at 50% 0%, #152b58, #071225 55%);
+}
+
+button {
+	font: inherit;
+	cursor: pointer;
+}
+
+/* The game uses a phone-sized frame even when played on desktop. */
+.game-shell {
+	position: relative;
+	max-width: 520px;
+	height: 100dvh;
+	margin: auto;
+	overflow: hidden;
+	background: linear-gradient(180deg, rgba(20, 45, 91, 0.25), transparent 45%);
+}
+
+header,
+.hud,
+footer,
+.instructions {
+	position: absolute;
+	z-index: 3;
+	right: max(22px, env(safe-area-inset-right));
+	left: max(22px, env(safe-area-inset-left));
+	display: flex;
+	justify-content: space-between;
+}
+
+header {
+	top: max(22px, env(safe-area-inset-top));
+	align-items: center;
+}
+
+.brand {
+	color: #fff;
+	font: 700 15px 'Syncopate';
+	letter-spacing: 2px;
+	text-decoration: none;
+}
+
+.brand span {
+	color: #43f1cf;
+}
+
+.icon-button {
+	width: 38px;
+	height: 38px;
+	padding: 8px;
+	color: #a9c7e9;
+	font-size: 13px;
+	background: #0d2242aa;
+	border: 1px solid #42658d;
+	border-radius: 50%;
+}
+
+.hud {
+	top: 91px;
+}
+
+.hud div {
+	display: grid;
+	gap: 2px;
+}
+
+.hud div:nth-child(2) {
+	text-align: center;
+}
+
+.hud div:last-child {
+	text-align: right;
+}
+
+small,
+.eyebrow,
+footer {
+	color: #78a0c8;
+	font: 700 9px 'Syncopate';
+	letter-spacing: 1px;
+}
+
+strong {
+	font-size: 18px;
+	letter-spacing: 1px;
+}
+
+#combo {
+	color: #ffcf70;
+}
+
+canvas {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	touch-action: none;
+}
+
+.instructions {
+	bottom: 62px;
+	align-items: center;
+	justify-content: center;
+	gap: 17px;
+	color: #91bbdf;
+	font: 700 10px 'Syncopate';
+	letter-spacing: 1px;
+}
+
+.instructions span {
+	color: #43f1cf;
+	font: 22px system-ui;
+}
+
+footer {
+	bottom: max(17px, env(safe-area-inset-bottom));
+	font-size: 7px;
+}
+
+footer a {
+	color: #b8d7ed;
+	text-decoration: none;
+}
+
+/* The overlays are present in the page but become non-interactive when hidden. */
+.overlay {
+	position: absolute;
+	z-index: 5;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 0 33px;
+	background: radial-gradient(ellipse at center, #0d2358d9, #061127f2);
+	transition:
+		opacity 0.25s,
+		transform 0.25s;
+}
+
+.overlay.hidden {
+	pointer-events: none;
+	opacity: 0;
+	transform: scale(1.04);
+}
+
+.overlay h1 {
+	margin: 11px 0 17px;
+	font: 700 clamp(35px, 10vw, 52px) / 0.99 'Syncopate';
+	letter-spacing: -2px;
+}
+
+.overlay em {
+	color: #43f1cf;
+	font-style: normal;
+}
+
+.overlay > p:not(.eyebrow):not(.tip) {
+	max-width: 280px;
+	margin: 0 0 27px;
+	color: #afc9e5;
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.primary,
+.secondary {
+	width: 100%;
+	padding: 17px;
+	font: 700 12px 'Syncopate';
+	letter-spacing: 1px;
+}
+
+.primary {
+	color: #06203c;
+	background: #43f1cf;
+	border: 0;
+	box-shadow: 0 0 30px #43f1cf66;
+}
+
+.secondary {
+	margin-top: 10px;
+	color: #c9e3f7;
+	background: transparent;
+	border: 1px solid #53779c;
+}
+
+.tip {
+	align-self: center;
+	margin-top: 19px;
+	color: #678caf;
+	font-size: 11px;
+}
+
+/* Wide screens frame the game without changing its mobile-first layout. */
+@media (min-width: 600px) {
+	.game-shell {
+		box-shadow: 0 0 70px #0008;
+	}
+}

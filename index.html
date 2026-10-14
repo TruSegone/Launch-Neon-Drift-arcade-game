@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<meta name="theme-color" content="#071225" />
+		<title>Neon Drift</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<!-- The complete game experience is kept in one responsive mobile viewport. -->
+		<main class="game-shell">
+			<!-- Persistent controls and live game information. -->
+			<header>
+				<a class="brand" href="#" aria-label="Neon Drift home">NEON <span>DRIFT</span></a>
+				<button id="sound" class="icon-button" aria-label="Toggle sound">◖))</button>
+			</header>
+			<section class="hud" aria-label="Game score">
+				<div><small>SCORE</small><strong id="score">000000</strong></div>
+				<div><small>BEST</small><strong id="best">000000</strong></div>
+				<div><small>COMBO</small><strong id="combo">x1</strong></div>
+			</section>
+
+			<!-- Canvas owns all real-time visuals; JavaScript performs the drawing. -->
+			<canvas id="game" aria-label="Neon Drift game"></canvas>
+			<section class="instructions">
+				<span>←</span> DRAG TO STEER <span>→</span>
+			</section>
+			<!-- Start and game-over panels are toggled by the game state. -->
+			<section id="start-screen" class="overlay">
+				<p class="eyebrow">A FAST LITTLE ARCADE RUN</p>
+				<h1>OUTRUN<br /><em>THE VOID.</em></h1>
+				<p>Collect energy. Dodge the shards. Keep your streak alive.</p>
+				<button id="play" class="primary">TAP TO PLAY</button>
+				<p class="tip">Works best with headphones + thumbs.</p>
+			</section>
+			<section id="game-over" class="overlay hidden">
+				<p class="eyebrow">RUN COMPLETE</p>
+				<h1>YOU DRIFTED<br /><em id="final-score">0</em></h1>
+				<p id="run-note">One more run?</p>
+				<button id="retry" class="primary">DRIFT AGAIN</button>
+				<button id="share" class="secondary">SHARE SCORE</button>
+			</section>
+			<footer>
+				<span>MADE FOR THE OPEN WEB</span>
+				<a href="https://github.com/" target="_blank" rel="noreferrer">VIEW SOURCE ↗</a>
+			</footer>
+		</main>
+		<script src="game.js"></script>
+	</body>
+</html>
