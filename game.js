@@ -31,6 +31,16 @@ let player;
 let items = [];
 let particles = [];
 
+// Audio is generated in-browser so the game stays fast to load and easy to host.
+let audioContext;
+let musicTimer;
+let musicStep = 0;
+
+const musicNotes = [
+	220, 0, 261.63, 0, 329.63, 0, 293.66, 0,
+	220, 0, 261.63, 0, 392, 0, 329.63, 0,
+];
+
 let bestScore = Number(localStorage.neonDriftBest || 0);
 bestElement.textContent = formatScore(bestScore);
 
@@ -68,6 +78,9 @@ function startGame() {
 	resetGame();
 	isRunning = true;
 	previousFrameTime = performance.now();
+	prepareAudio();
+	startMusic();
+	playButtonSound();
 
 	startScreen.classList.add('hidden');
 	gameOverScreen.classList.add('hidden');
@@ -87,6 +100,8 @@ function endGame() {
 			: 'The void always wants another lap.';
 
 	gameOverScreen.classList.remove('hidden');
+	stopMusic();
+	playCrashSound();
 	vibrate([35, 30, 70]);
 }
 
@@ -142,6 +157,7 @@ function updateItems(deltaTime) {
 			score += 25 * combo;
 			combo = Math.min(9, combo + 1);
 			createBurst(item.x, item.y, '#43f1cf');
+			playCollectSound();
 			vibrate(18);
 			return false; // Remove collected energy immediately.
 		}
@@ -297,6 +313,82 @@ function vibrate(pattern) {
 	if (soundEnabled && navigator.vibrate) navigator.vibrate(pattern);
 }
 
+// ----- Audio ---------------------------------------------------------------
+
+function prepareAudio() {
+	if (!soundEnabled) return;
+
+	if (!audioContext) {
+		const AudioEngine = window.AudioContext || window.webkitAudioContext;
+		audioContext = new AudioEngine();
+	}
+
+	// Browsers require this to happen from a tap/click before producing sound.
+	if (audioContext.state === 'suspended') {
+		audioContext.resume();
+	}
+}
+
+function playTone(frequency, duration, volume, wave = 'sine', startTime = 0) {
+	if (!soundEnabled || !audioContext) return;
+
+	const oscillator = audioContext.createOscillator();
+	const gain = audioContext.createGain();
+	const now = audioContext.currentTime + startTime;
+
+	oscillator.type = wave;
+	oscillator.frequency.setValueAtTime(frequency, now);
+	gain.gain.setValueAtTime(0.0001, now);
+	gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
+	gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+	oscillator.connect(gain);
+	gain.connect(audioContext.destination);
+	oscillator.start(now);
+	oscillator.stop(now + duration + 0.02);
+}
+
+function playCollectSound() {
+	playTone(660, 0.07, 0.045, 'triangle');
+	playTone(990, 0.12, 0.035, 'triangle', 0.05);
+}
+
+function playCrashSound() {
+	playTone(100, 0.42, 0.11, 'sawtooth');
+	playTone(65, 0.5, 0.08, 'square', 0.05);
+}
+
+function playButtonSound() {
+	playTone(440, 0.06, 0.035, 'sine');
+	playTone(660, 0.1, 0.025, 'sine', 0.05);
+}
+
+function startMusic() {
+	if (!soundEnabled || musicTimer) return;
+
+	musicStep = 0;
+	playMusicStep();
+	musicTimer = window.setInterval(playMusicStep, 250);
+}
+
+function playMusicStep() {
+	const note = musicNotes[musicStep];
+
+	if (note) {
+		playTone(note, 0.21, 0.018, 'sine');
+		playTone(note / 2, 0.2, 0.012, 'triangle');
+	}
+
+	musicStep = (musicStep + 1) % musicNotes.length;
+}
+
+function stopMusic() {
+	if (!musicTimer) return;
+
+	window.clearInterval(musicTimer);
+	musicTimer = undefined;
+}
+
 canvas.addEventListener('pointerdown', (event) => {
 	canvas.setPointerCapture(event.pointerId);
 	steer(event.clientX - canvas.getBoundingClientRect().left);
@@ -312,6 +404,14 @@ getElement('#retry').addEventListener('click', startGame);
 soundButton.addEventListener('click', () => {
 	soundEnabled = !soundEnabled;
 	soundButton.textContent = soundEnabled ? '◖))' : '◖×';
+
+	if (soundEnabled) {
+		prepareAudio();
+		playButtonSound();
+		if (isRunning) startMusic();
+	} else {
+		stopMusic();
+	}
 });
 
 getElement('#share').addEventListener('click', async () => {
