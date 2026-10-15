@@ -215,3 +215,46 @@ footer a {
 		box-shadow: 0 0 70px #0008;
 	}
 }
+
+
+/* Mission progression HUD and brief level-up feedback. */
+.hud { gap: 10px; }
+#level { color: #43f1cf; }
+#mission-progress {
+	color: #8bb2d5;
+	font-size: 8px;
+	letter-spacing: .4px;
+	white-space: nowrap;
+}
+.level-banner {
+	position: absolute;
+	z-index: 4;
+	top: 43%;
+	left: 50%;
+	width: max-content;
+	max-width: calc(100% - 40px);
+	padding: 14px 22px;
+	transform: translate(-50%, -50%);
+	text-align: center;
+	background: #071225ef;
+	border: 1px solid #43f1cf;
+	box-shadow: 0 0 28px #43f1cf55;
+	pointer-events: none;
+}
+.level-banner strong, .level-banner span { display: block; }
+.level-banner strong {
+	color: #43f1cf;
+	font: 700 14px 'Syncopate';
+}
+.level-banner span {
+	margin-top: 7px;
+	color: #b9d7ed;
+	font-size: 11px;
+	letter-spacing: 1px;
+}
+.level-banner.hidden { display: none; }
+@media (max-width: 380px) {
+	.hud { left: 16px; right: 16px; gap: 6px; }
+	.hud strong { font-size: 15px; }
+	#mission-progress { font-size: 7px; }
+}
