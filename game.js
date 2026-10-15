@@ -15,6 +15,9 @@ const comboElement = getElement('#combo');
 const startScreen = getElement('#start-screen');
 const gameOverScreen = getElement('#game-over');
 const soundButton = getElement('#sound');
+const levelElement = getElement('#level');
+const missionProgressElement = getElement('#mission-progress');
+const levelBanner = getElement('#level-banner');
 
 // ----- Game state -----------------------------------------------------------
 
@@ -25,6 +28,10 @@ let isRunning = false;
 let previousFrameTime = 0;
 let score = 0;
 let combo = 1;
+let level = 1;
+let energyCollected = 0;
+let missionTarget = 5;
+let levelBannerTimer = 0;
 let spawnTimer = 0;
 let soundEnabled = true;
 let player;
@@ -59,6 +66,11 @@ function resizeCanvas() {
 function resetGame() {
 	score = 0;
 	combo = 1;
+	level = 1;
+	energyCollected = 0;
+	missionTarget = 5;
+	levelBannerTimer = 0;
+	levelBanner.classList.add('hidden');
 	spawnTimer = 0;
 	items = [];
 	particles = [];
@@ -123,6 +135,10 @@ function update(deltaTime) {
 	movePlayer(deltaTime);
 	updateItems(deltaTime);
 	updateParticles(deltaTime);
+	if (levelBannerTimer > 0) {
+		levelBannerTimer -= deltaTime;
+		if (levelBannerTimer <= 0) levelBanner.classList.add('hidden');
+	}
 	updateHud();
 }
 
@@ -140,7 +156,7 @@ function updateItems(deltaTime) {
 
 	if (spawnTimer <= 0) {
 		// Item frequency increases gradually as a run goes on.
-		spawnTimer = 0.43 - Math.min(score / 2500, 0.18);
+		spawnTimer = Math.max(0.19, 0.43 - (level - 1) * 0.035 - Math.min(score / 4000, 0.08));
 		spawnItem();
 	}
 
@@ -155,6 +171,8 @@ function updateItems(deltaTime) {
 
 		if (item.isEnergy) {
 			score += 25 * combo;
+			energyCollected += 1;
+			if (energyCollected >= missionTarget) completeMission();
 			combo = Math.min(9, combo + 1);
 			createBurst(item.x, item.y, '#43f1cf');
 			playCollectSound();
@@ -186,9 +204,23 @@ function spawnItem() {
 		y: -35,
 		radius: isEnergy ? 10 : 14,
 		isEnergy,
-		speed: 170 + Math.min(score, 700) * 0.12,
+		speed: 170 + (level - 1) * 24 + Math.min(score, 700) * 0.12,
 		rotation: Math.random() * 6,
 	});
+}
+
+function completeMission() {
+	level += 1;
+	energyCollected = 0;
+	missionTarget = 5 + (level - 1) * 3;
+	combo = Math.min(9, combo + 1);
+	levelBanner.querySelector('#level-title').textContent = `MISSION ${String(level).padStart(2, '0')}`;
+	levelBanner.querySelector('#level-subtitle').textContent = `TARGET: ${missionTarget} ENERGY · SPEED UP`;
+	levelBanner.classList.remove('hidden');
+	levelBannerTimer = 1.8;
+	createBurst(width / 2, height * 0.4, '#43f1cf', 24);
+	playButtonSound();
+	vibrate([25, 25, 45]);
 }
 
 function createBurst(x, y, color, amount = 10) {
@@ -299,6 +331,8 @@ function steer(pointerX) {
 function updateHud() {
 	scoreElement.textContent = formatScore(Math.floor(score));
 	comboElement.textContent = `x${combo}`;
+	levelElement.textContent = String(level).padStart(2, '0');
+	missionProgressElement.textContent = `${energyCollected} / ${missionTarget} ENERGY`;
 }
 
 function formatScore(value) {
