@@ -19,10 +19,12 @@
 				<div><small>SCORE</small><strong id="score">000000</strong></div>
 				<div><small>BEST</small><strong id="best">000000</strong></div>
 				<div><small>COMBO</small><strong id="combo">x1</strong></div>
+				<div><small>MISSION</small><strong id="level">01</strong><span id="mission-progress">0 / 5 ENERGY</span></div>
 			</section>
 
 			<!-- Canvas owns all real-time visuals; JavaScript performs the drawing. -->
 			<canvas id="game" aria-label="Neon Drift game"></canvas>
+			<div id="level-banner" class="level-banner hidden" role="status" aria-live="polite"><strong id="level-title">MISSION 02</strong><span id="level-subtitle">SPEED INCREASED</span></div>
 			<section class="instructions">
 				<span>←</span> DRAG TO STEER <span>→</span>
 			</section>
@@ -30,7 +32,7 @@
 			<section id="start-screen" class="overlay">
 				<p class="eyebrow">A FAST LITTLE ARCADE RUN</p>
 				<h1>OUTRUN<br /><em>THE VOID.</em></h1>
-				<p>Collect energy. Dodge the shards. Keep your streak alive.</p>
+				<p>Complete missions, collect energy, and dodge the shards. Every mission makes the void faster.</p>
 				<button id="play" class="primary">TAP TO PLAY</button>
 				<p class="tip">Works best with headphones + thumbs.</p>
 			</section>
