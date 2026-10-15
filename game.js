@@ -32,7 +32,20 @@ let level = 1;
 let energyCollected = 0;
 let missionTarget = 5;
 let levelBannerTimer = 0;
+let environmentPulse = 0;
 let spawnTimer = 0;
+
+const environments = [
+	{ name: 'NEON HIGHWAY', subtitle: 'WARM UP · CYAN GRID', background: '#071225', accent: '#43f1cf', secondary: '#3382cf', hazard: '#ff5d7e', rail: '#43f1cf', grid: 'rgba(51, 130, 207, 0.14)' },
+	{ name: 'NEON HIGHWAY', subtitle: 'FASTER TRAFFIC', background: '#06172a', accent: '#43f1cf', secondary: '#3382cf', hazard: '#ff5d7e', rail: '#43f1cf', grid: 'rgba(51, 130, 207, 0.18)' },
+	{ name: 'INDUSTRIAL TUNNEL', subtitle: 'MAGENTA SECTOR · TIGHT GAPS', background: '#180b27', accent: '#ff54dc', secondary: '#8b5cf6', hazard: '#ff7b8e', rail: '#ff54dc', grid: 'rgba(255, 84, 220, 0.16)' },
+	{ name: 'INDUSTRIAL TUNNEL', subtitle: 'HEAVY TRAFFIC · HIGH SPEED', background: '#210824', accent: '#ff54dc', secondary: '#a855f7', hazard: '#ff647c', rail: '#ff54dc', grid: 'rgba(255, 84, 220, 0.2)' },
+	{ name: 'THE RED VOID', subtitle: 'CRITICAL ZONE · SURVIVE', background: '#21090f', accent: '#ff4d5e', secondary: '#ff8b42', hazard: '#ff294f', rail: '#ff4d5e', grid: 'rgba(255, 65, 82, 0.2)' },
+];
+
+function getEnvironment() {
+	return environments[Math.min(level - 1, environments.length - 1)];
+}
 let soundEnabled = true;
 let player;
 let items = [];
@@ -132,6 +145,7 @@ function gameLoop(currentTime) {
 }
 
 function update(deltaTime) {
+	environmentPulse += deltaTime;
 	movePlayer(deltaTime);
 	updateItems(deltaTime);
 	updateParticles(deltaTime);
@@ -174,7 +188,7 @@ function updateItems(deltaTime) {
 			energyCollected += 1;
 			if (energyCollected >= missionTarget) completeMission();
 			combo = Math.min(9, combo + 1);
-			createBurst(item.x, item.y, '#43f1cf');
+			createBurst(item.x, item.y, getEnvironment().accent);
 			playCollectSound();
 			vibrate(18);
 			return false; // Remove collected energy immediately.
@@ -214,11 +228,15 @@ function completeMission() {
 	energyCollected = 0;
 	missionTarget = 5 + (level - 1) * 3;
 	combo = Math.min(9, combo + 1);
-	levelBanner.querySelector('#level-title').textContent = `MISSION ${String(level).padStart(2, '0')}`;
-	levelBanner.querySelector('#level-subtitle').textContent = `TARGET: ${missionTarget} ENERGY · SPEED UP`;
+	const environment = getEnvironment();
+	levelBanner.querySelector('#level-title').textContent = environment.name;
+	levelBanner.querySelector('#level-subtitle').textContent = `MISSION ${String(level).padStart(2, '0')} · ${missionTarget} ENERGY · SPEED UP`;
+	levelBanner.style.borderColor = environment.accent;
+	levelBanner.querySelector('#level-title').style.color = environment.accent;
+	levelBanner.style.boxShadow = `0 0 32px ${environment.accent}55`;
 	levelBanner.classList.remove('hidden');
 	levelBannerTimer = 1.8;
-	createBurst(width / 2, height * 0.4, '#43f1cf', 24);
+	createBurst(width / 2, height * 0.4, environment.accent, 24);
 	playButtonSound();
 	vibrate([25, 25, 45]);
 }
@@ -248,16 +266,70 @@ function draw() {
 }
 
 function drawBackground() {
-	context.fillStyle = '#071225';
+	const environment = getEnvironment();
+	context.fillStyle = environment.background;
 	context.fillRect(0, 0, width, height);
 
-	for (let index = 0; index < 24; index += 1) {
-		const lineY = (index * 83 + score * 9) % (height + 80) - 40;
-		context.strokeStyle = 'rgba(51, 130, 207, 0.12)';
+	// Perspective lanes make each mission feel like a different place.
+	const horizonY = height * 0.19;
+	const drift = (score * (level >= 5 ? 20 : 12)) % 70;
+	context.save();
+	context.strokeStyle = environment.grid;
+	context.lineWidth = 1;
+	for (let index = -5; index <= 5; index += 1) {
+		context.beginPath();
+		context.moveTo(width / 2 + index * 5, horizonY);
+		context.lineTo(width / 2 + index * width * 0.19, height);
+		context.stroke();
+	}
+	for (let index = 0; index < 17; index += 1) {
+		const progress = ((index * 43 + drift) % (height - horizonY));
+		const lineY = horizonY + progress;
+		context.globalAlpha = 0.25 + (progress / (height - horizonY)) * 0.55;
 		context.beginPath();
 		context.moveTo(0, lineY);
-		context.lineTo(width, lineY + height * 0.08);
+		context.lineTo(width, lineY);
 		context.stroke();
+	}
+	context.globalAlpha = 1;
+
+	// Glowing side rails pulse faster in the later missions.
+	const pulse = 0.65 + Math.sin(environmentPulse * (level >= 5 ? 8 : 3)) * 0.18;
+	context.globalAlpha = pulse;
+	context.strokeStyle = environment.rail;
+	context.shadowBlur = level >= 5 ? 22 : 13;
+	context.shadowColor = environment.rail;
+	context.lineWidth = level >= 5 ? 3 : 2;
+	context.beginPath();
+	context.moveTo(width * 0.08, horizonY);
+	context.lineTo(0, height);
+	context.moveTo(width * 0.92, horizonY);
+	context.lineTo(width, height);
+	context.stroke();
+	context.restore();
+
+	// Industrial tunnel ribs and red-void warning lights appear in later sectors.
+	if (level >= 3) {
+		const ribColor = environment.secondary;
+		context.save();
+		context.strokeStyle = ribColor;
+		context.globalAlpha = level >= 5 ? 0.32 : 0.2;
+		context.lineWidth = 2;
+		for (let index = 0; index < 5; index += 1) {
+			const y = horizonY + ((index * 125 + score * (level >= 5 ? 17 : 10)) % (height - horizonY));
+			const halfWidth = 18 + ((y - horizonY) / (height - horizonY)) * width * 0.44;
+			context.strokeRect(width / 2 - halfWidth, y, halfWidth * 2, 15 + halfWidth * 0.08);
+		}
+		if (level >= 5) {
+			context.fillStyle = environment.accent;
+			for (let index = 0; index < 6; index += 1) {
+				const y = horizonY + ((index * 91 + score * 14) % (height - horizonY));
+				context.globalAlpha = 0.45 + Math.sin(environmentPulse * 9 + index) * 0.25;
+				context.fillRect(8, y, 5, 18);
+				context.fillRect(width - 13, y, 5, 18);
+			}
+		}
+		context.restore();
 	}
 }
 
@@ -274,7 +346,8 @@ function drawItem(item) {
 	context.save();
 	context.translate(item.x, item.y);
 	context.rotate(item.rotation);
-	context.fillStyle = item.isEnergy ? '#43f1cf' : '#ff5d7e';
+	const environment = getEnvironment();
+	context.fillStyle = item.isEnergy ? environment.accent : environment.hazard;
 	context.shadowBlur = 18;
 	context.shadowColor = context.fillStyle;
 	context.beginPath();
@@ -307,7 +380,7 @@ function drawPlayer() {
 	context.translate(player.x, player.y);
 	context.fillStyle = '#eefaff';
 	context.shadowBlur = 24;
-	context.shadowColor = '#43f1cf';
+	context.shadowColor = getEnvironment().accent;
 	context.beginPath();
 	context.moveTo(0, -19);
 	context.lineTo(14, 15);
@@ -315,7 +388,7 @@ function drawPlayer() {
 	context.lineTo(-14, 15);
 	context.closePath();
 	context.fill();
-	context.fillStyle = '#43f1cf';
+	context.fillStyle = getEnvironment().accent;
 	context.fillRect(-3, -4, 6, 13);
 	context.restore();
 }
@@ -461,4 +534,5 @@ getElement('#share').addEventListener('click', async () => {
 
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
+resetGame();
 draw();
